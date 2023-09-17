@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const port = process.env.PORT || 8001;
-
+const jwt = require("jsonwebtoken");
 // middleware
 app.use(cors());
 app.use(express.json());
@@ -28,7 +28,33 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+const userCollection = client.db("TOyMarketUser").collection("Users");
+const AllToyCollection = client.db("AllToys").collection("ToyCollection");
 
+// apis
+app.get("/Alltoys", async (req, res) => {
+  const result = await AllToyCollection.find().toArray();
+  res.send(result);
+});
+app.post("/User", async (req, res) => {
+  const data = req.body;
+  result = await userCollection.insertOne(data);
+  res.send(result);
+});
+app.post("/AddToy", async (req, res) => {
+  const toyData = req.body;
+  const result = await AllToyCollection.insertOne(toyData);
+  res.send(result);
+});
+app.post("/jwt", (req, res) => {
+  const user = req.body;
+  console.log(user);
+  const token = jwt.sign(user, process.env.DB_SECRET, {
+    expiresIn: "2h",
+  });
+  console.log(token);
+  res.send({ token });
+});
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
