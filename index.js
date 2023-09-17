@@ -38,14 +38,16 @@ app.get("/Alltoys", async (req, res) => {
 });
 app.post("/User", async (req, res) => {
   const data = req.body;
-  result = await userCollection.insertOne(data);
+  const result = await userCollection.insertOne(data);
   res.send(result);
 });
-app.post("/AddToy", async (req, res) => {
-  const toyData = req.body;
-  const result = await AllToyCollection.insertOne(toyData);
+app.post("/Addtoy", async (req, res) => {
+  const data = req.body;
+  console.log(data);
+  const result = await AllToyCollection.insertOne(data);
   res.send(result);
 });
+
 app.post("/jwt", (req, res) => {
   const user = req.body;
   console.log(user);
