@@ -4,10 +4,34 @@ const cors = require("cors");
 const port = process.env.PORT || 8001;
 const jwt = require("jsonwebtoken");
 // middleware
+
 app.use(cors());
+
 app.use(express.json());
 require("dotenv").config();
-
+// jwb function
+const verifyJWT = (req, res, next) => {
+  //   console.log("hitting verify");
+  //   console.log(req.headers.authorization);
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res
+      .status(401)
+      .send({ error: true, message: "unauthorized user access" });
+  } else {
+    const token = authorization.split(" ")[1];
+    console.log(token);
+    jwt.verify(token, process.env.DB_SECRET, (error, decoded) => {
+      if (error) {
+        return res
+          .status(401)
+          .send({ error: true, message: "unauthorized access" });
+      }
+      req.decoded = decoded;
+      next();
+    });
+  }
+};
 // normal api codes
 app.get("/", (req, res) => {
   res.send("Toys Are Broken");
@@ -17,7 +41,7 @@ app.listen(port, () => {
 });
 
 // mongodb codes
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = process.env.DB_URI;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -47,7 +71,34 @@ app.post("/Addtoy", async (req, res) => {
   const result = await AllToyCollection.insertOne(data);
   res.send(result);
 });
-
+app.put("/UpdateToy:id", async (req, res) => {
+  const data = req.body;
+  const id = req.params.id;
+  const filter = { _id: new ObjectId(id) };
+  console.log(data);
+  const option = { upsert: true };
+  const updatedToy = {
+    $set: {
+      Name: data.Name,
+      MadeIn: data.MadeIn,
+      Recommended_Age: data.Recommended_Age,
+      Price: data.Price,
+      Description: data.Description,
+      Category: data.Category,
+      Quantity: data.Quantity,
+      email: data.email,
+      Image_URL: data.Image_URL,
+    },
+  };
+  const result = await AllToyCollection.insertOne(filter, updatedToy, option);
+  res.send(result);
+});
+app.get("/ToyDetails/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await AllToyCollection.findOne(query);
+  res.send(result);
+});
 app.post("/jwt", (req, res) => {
   const user = req.body;
   console.log(user);
@@ -57,10 +108,24 @@ app.post("/jwt", (req, res) => {
   console.log(token);
   res.send({ token });
 });
+app.get("/MyToys", verifyJWT, async (req, res) => {
+  const decoded = req.decoded;
+  console.log(decoded.email);
+  if (decoded.email !== req.query?.email) {
+    return res.status(403).send({ error: 1, message: "Forbidden access" });
+  }
+  console.log(req.query);
+  let query = {};
+  if (req.query?.email) {
+    query = { email: req.query.email };
+  }
+  const result = await AllToyCollection.find(query).toArray();
+  res.send(result);
+});
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
