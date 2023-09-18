@@ -8,6 +8,14 @@
   ],
   "routes": [
     {
+      "src": "/Update/:id",
+      "methods": ["PUT"],
+      "dest": "/Update/:id",
+      "headers": {
+        "Access-Control-Allow-Origin": "*"
+      }
+    },
+    {
       "src": "/(.*)",
       "dest": "/",
       "methods": ["GET", "POST", "PATCH", "DELETE", "OPTIONS"]

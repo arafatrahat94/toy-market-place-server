@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const port = process.env.PORT || 8001;
+const port = process.env.PORT || 5001;
 const jwt = require("jsonwebtoken");
 // middleware
 
@@ -42,7 +42,7 @@ app.listen(port, () => {
 
 // mongodb codes
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const uri = process.env.DB_URI;
+const uri = `mongodb+srv://${process.env.DB_URI_Name}:${process.env.DB_USER_SEC}@cluster1.z16hlgw.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -71,29 +71,29 @@ app.post("/Addtoy", async (req, res) => {
   const result = await AllToyCollection.insertOne(data);
   res.send(result);
 });
-app.put("/UpdateToy:id", async (req, res) => {
-  const data = req.body;
+app.put("/Update:id", async (req, res) => {
+  const Udata = req.body;
   const id = req.params.id;
   const filter = { _id: new ObjectId(id) };
-  console.log(data);
+
   const option = { upsert: true };
   const updatedToy = {
     $set: {
-      Name: data.Name,
-      MadeIn: data.MadeIn,
-      Recommended_Age: data.Recommended_Age,
-      Price: data.Price,
-      Description: data.Description,
-      Category: data.Category,
-      Quantity: data.Quantity,
-      email: data.email,
-      Image_URL: data.Image_URL,
+      Name: Udata.Name,
+      MadeIn: Udata.MadeIn,
+      Recommended_Age: Udata.Recommended_Age,
+      Price: Udata.Price,
+      Description: Udata.Description,
+      Category: Udata.Category,
+      Quantity: Udata.Quantity,
+      email: Udata.email,
+      Image_URL: Udata.Image_URL,
     },
   };
-  const result = await AllToyCollection.insertOne(filter, updatedToy, option);
+  const result = await AllToyCollection.updateOne(filter, updatedToy, option);
   res.send(result);
 });
-app.get("/ToyDetails/:id", async (req, res) => {
+app.get("/Details/:id", async (req, res) => {
   const id = req.params.id;
   const query = { _id: new ObjectId(id) };
   const result = await AllToyCollection.findOne(query);
