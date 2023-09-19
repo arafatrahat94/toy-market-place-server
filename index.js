@@ -54,10 +54,54 @@ const client = new MongoClient(uri, {
 });
 const userCollection = client.db("TOyMarketUser").collection("Users");
 const AllToyCollection = client.db("AllToys").collection("ToyCollection");
+const AllReviewCollection = client.db("ALLReview").collection("REVIEWS");
 
 // apis
-app.get("/Alltoys", async (req, res) => {
-  const result = await AllToyCollection.find().toArray();
+app.post("/Review", async (req, res) => {
+  const data = req.body;
+  console.log(data);
+  const result = await AllReviewCollection.insertOne(data);
+  res.send(result);
+});
+app.get("/Review/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { Toy_id: id };
+  const result = await AllReviewCollection.find(query)
+    .sort({ _id: -1 })
+    .toArray();
+  console.log(result);
+  res.send(result);
+});
+app.get("/User", async (req, res) => {
+  console.log(req.query);
+  let query = {};
+  if (req.query?.email) {
+    query = { email: req.query.email };
+  }
+  const result = await userCollection.findOne(query);
+  res.send(result);
+});
+app.get("/Alltoy", async (req, res) => {
+  const result = await AllToyCollection.find()
+    .sort({ _id: -1 })
+    .limit(6)
+    .toArray();
+  res.send(result);
+});
+app.get("/productCount", async (req, res) => {
+  const result = await AllToyCollection.estimatedDocumentCount();
+  res.send({ totalData: result });
+});
+app.get("/Toys", async (req, res) => {
+  console.log(req.query);
+  const page = parseInt(req.query.page) || 0;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = page * limit;
+  const result = await AllToyCollection.find()
+    .skip(skip)
+    .limit(limit)
+    .sort({ _id: -1 })
+    .toArray();
   res.send(result);
 });
 app.post("/User", async (req, res) => {
