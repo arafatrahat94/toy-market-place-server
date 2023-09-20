@@ -55,8 +55,28 @@ const client = new MongoClient(uri, {
 const userCollection = client.db("TOyMarketUser").collection("Users");
 const AllToyCollection = client.db("AllToys").collection("ToyCollection");
 const AllReviewCollection = client.db("ALLReview").collection("REVIEWS");
+const AllBannerImgCollection = client.db("ALLImage").collection("Images");
 
 // apis
+app.post("/ImageBanner", async (req, res) => {
+  const data = req.body;
+  console.log(data);
+  const result = await AllBannerImgCollection.insertOne(data);
+  res.send(result);
+});
+app.get("/ImageBanner", async (req, res) => {
+  const result = await AllBannerImgCollection.find()
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(result);
+});
+app.delete("/DeleteImageBanner/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+
+  const result = await AllBannerImgCollection.deleteOne(query);
+  res.send(result);
+});
 app.post("/Review", async (req, res) => {
   const data = req.body;
   console.log(data);
@@ -98,6 +118,45 @@ app.get("/Toys", async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const skip = page * limit;
   const result = await AllToyCollection.find()
+    .skip(skip)
+    .limit(limit)
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(result);
+});
+app.get("/Anime", async (req, res) => {
+  const query = { Category: "Anime" };
+  console.log(req.query);
+  const page = parseInt(req.query.page) || 0;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = page * limit;
+  const result = await AllToyCollection.find(query)
+    .skip(skip)
+    .limit(limit)
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(result);
+});
+app.get("/Dc", async (req, res) => {
+  const query = { Category: "Dc" };
+  console.log(req.query);
+  const page = parseInt(req.query.page) || 0;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = page * limit;
+  const result = await AllToyCollection.find(query)
+    .skip(skip)
+    .limit(limit)
+    .sort({ _id: -1 })
+    .toArray();
+  res.send(result);
+});
+app.get("/Marvel", async (req, res) => {
+  const query = { Category: "Marvel" };
+  console.log(req.query);
+  const page = parseInt(req.query.page) || 0;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = page * limit;
+  const result = await AllToyCollection.find(query)
     .skip(skip)
     .limit(limit)
     .sort({ _id: -1 })
@@ -170,6 +229,34 @@ app.get("/MyToys", verifyJWT, async (req, res) => {
     query = { email: req.query.email };
   }
   const result = await AllToyCollection.find(query).toArray();
+  res.send(result);
+});
+app.get("/Allusers", verifyJWT, async (req, res) => {
+  const decoded = req.decoded;
+  console.log(decoded.email);
+  if (decoded.email !== req.query?.email) {
+    return res.status(403).send({ error: 1, message: "Forbidden access" });
+  }
+
+  const result = await userCollection.find().toArray();
+  res.send(result);
+});
+app.patch("/User/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const data = req.body;
+  const UpdatedData = {
+    $set: {
+      verified: data.verified,
+    },
+  };
+  const result = await userCollection.updateOne(query, UpdatedData);
+  res.send(result);
+});
+app.delete("/DUser/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await userCollection.deleteOne(query);
   res.send(result);
 });
 async function run() {
